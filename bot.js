@@ -18,8 +18,6 @@ const DB_PASS = process.env.DB_PASS;
 const DB_HOST = process.env.DB_HOST;
 const DB_PORT = process.env.DB_PORT;
 
-
-
 const CRYPTO_BOT_TOKEN = process.env.CRYPTO_BOT_TOKEN;
 const CRYPTO_BOT_URL = process.env.CRYPTO_BOT_URL;
 
@@ -88,6 +86,7 @@ bot.on('message', async newMsg => {
         if(newMsg['chat']['first_name']) name = newMsg['chat']['first_name'];
         let sname = "";
         if(newMsg['chat']['last_name']) sname = newMsg['chat']['last_name'];
+        // let fullName = name +" "+ sname;
         let username = "";
         if(newMsg['chat']['username']) username = newMsg['chat']['username'];
 
@@ -126,6 +125,7 @@ bot.on('message', async newMsg => {
 
         let userInput = botUser['input'];
         let inputData = {};
+        // console.log(botUser['input_data']);
         if(!botFuncs.empty(botUser['input_data'])) inputData = botFuncs.decodeToDb(botUser['input_data']);
         if(botFuncs.empty(botUser['settings']))
         {
@@ -165,6 +165,19 @@ bot.on('message', async newMsg => {
                 if(!botFuncs.empty(cmdsKey[cmdData['kbd']]['buttons'])) btns = cmdsKey[cmdData['kbd']]['buttons'];
             }
 
+
+            if(!botFuncs.empty(userInput) && botFuncs.empty(cmdsKey[cmd]))
+            {
+                // if(preg_match("/^([^:]+):(.+)/", userInput, preg))
+                // {
+                    // inputType = preg[1];
+                    // editKey = preg[2];
+
+                    // if(!botFuncs.empty(fileId)) cmd = this->tg->getFile(fileId);
+
+                    // inputData[editKey] = ["type" => inputType, "val" => cmd];
+                // }
+            }
             if(!botFuncs.empty(cmdData['newUserInput'])) newUserInput = cmdData['newUserInput'];
             else newUserInput = "";
 
@@ -677,7 +690,6 @@ bot.on('message', async newMsg => {
                         "reply_markup": botFuncs.getBtnsReplyMarkup(btns)
                     }
                     console.log(options);
-                    
                 }
 
                 console.log("kbds here 2");
@@ -1836,6 +1848,8 @@ bot.on('callback_query', async newMsgCall => {
                                 }
                                 else
                                 {
+                                    // if(botFuncs.empty(tgText)) return;
+
                                     if(botFuncs.empty(newMsg['text'])) bot.editMessageCaption(tgText, options);
                                     else if(!botFuncs.empty(newMsg['text'])) bot.editMessageText(tgText, options);
                                     else if(!botFuncs.empty(tgText)) bot.sendMessage(botUser['uid'], tgText, options);
@@ -1859,6 +1873,11 @@ bot.on('callback_query', async newMsgCall => {
                 }
             }
         }
+        
+
+
+        // let res = await bot.sendMessage(botUser['uid'], `Вы запустили бота!`);
+        
     }
     catch(error)
     {
