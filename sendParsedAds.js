@@ -3,10 +3,10 @@ import 'dotenv/config'
 import TelegramBot from 'node-telegram-bot-api'
 import util from 'util'
 
-import { botDataObj } from './../class/botData.mjs'
+import { botDataObj } from './class/botData.mjs'
 let BOTS_CONFIGS = botDataObj
 
-import botFuncsAll from './../class/botFuncs.mjs'
+import botFuncsAll from './class/botFuncs.mjs'
 let botFuncs = new botFuncsAll()
 
 const API_KEY_BOT = process.env.API_KEY_BOT;
@@ -30,10 +30,7 @@ const conn = mysql.createConnection({
 const query = util.promisify(conn.query).bind(conn);
 
 const bot = new TelegramBot(API_KEY_BOT, {
-    polling: {
-        interval: 100,
-        autoStart: true
-    }
+    polling: false
 });
 
 
@@ -79,6 +76,7 @@ function check()
                     if(adObj['user']['feedback_reputation'] !== undefined) sellerRating = ((adObj['user']['feedback_reputation'] * 10) / 2).toFixed(1);
                     let photoLink = parsed_ad['adLink'];
                     if(adObj['photos'] !== undefined && adObj['photos'].length > 0) photoLink = adObj['photos'][0]['url'];
+                    let chatLink = "https://www."+ parsed_ad['domain'] +"/inbox/new?receiver_id=" + adObj['user']['id'];
 
                     let createData = botFuncs.botDateFromTime(botFuncs.strtotime(adObj['created_at_ts']) + BOTS_CONFIGS['domains_info'][parsed_ad['domain']]['time_zone_plus']);
                     sendText += "\n\n📅 Дата публикации: *"+ createData +"*";
@@ -87,6 +85,7 @@ function check()
 
                     sendText += "\n\n🔗 [Ссылка на объявление]("+ parsed_ad['adLink'] +")";
                     sendText += "\n🔗 [Ссылка на фото]("+ photoLink +")";
+                    sendText += "\n🔗 [Ссылка на чат]("+ chatLink +")";
 
                     let botViewsCount = "Нет";
                     let exstBotViews = await query("SELECT COUNT(*) as count FROM `parsed_ads` WHERE `adId` = ? AND `domain` = ? AND `sendTime` > 0", [parsed_ad['adId'], parsed_ad['domain']]);

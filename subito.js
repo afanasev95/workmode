@@ -1,8 +1,9 @@
 import mysql from 'mysql2'
 import 'dotenv/config'
 import util from 'util'
+import puppeteer from 'puppeteer'
 
-import botFuncsAll from './../class/botFuncs.mjs'
+import botFuncsAll from './class/botFuncs.mjs'
 let botFuncs = new botFuncsAll()
 
 const DB_USER = process.env.DB_USER;
@@ -10,7 +11,6 @@ const DB_NAME = process.env.DB_NAME;
 const DB_PASS = process.env.DB_PASS;
 const DB_HOST = process.env.DB_HOST;
 const DB_PORT = process.env.DB_PORT;
-
 const conn = mysql.createConnection({
   host: DB_HOST,
   user: DB_USER,
@@ -24,8 +24,6 @@ const query = util.promisify(conn.query).bind(conn);
 const MAX_ITEMS_CHECK = 50;
 const MAX_CHECK_TIME_TO_BACKS = 30; // in minutes
 const CHECK_INERVAL = 10; // in minutes
-
-
 
 
 let ProxiessArr = [
@@ -78,30 +76,19 @@ async function getLink(searchData, proxyInd)
     }
 
     var getReqData = new URLSearchParams({
-        "page" : "1",
-        "per_page" : "96",
-        "search_text" : "",
-        "catalog_ids" : catId,
-        "color_ids" : "",
-        "brand_ids" : "",
-        "size_ids" : "",
-        "material_ids" : "",
-        "video_game_rating_ids" : "",
-        "status_ids" : "",
-        "order" : "newest_first",
+        c: catId,
+        t: s,
+        qso: false,
+        shp: false,
+        urg: false,
+        sort: "datedesc",
+        lim: 30,
+        start: 0,
+        advt: 0,
     });
-    let apiLink = "https://www."+ searchData['domain'] +"/api/v2/catalog/items?" + getReqData.toString();
-
-    // if(!link.match(/order=newest_first/))
-    // {
-    //     if(!link.match(/\?/)) link += "?order=newest_first";
-    //     else link += "&order=newest_first";
-    // }
-
-    catLink = "https://www."+ searchData['domain'] +"/catalog?search_text=&catalog[]="+ catId +"&order=newest_first";
-
+    let apiLink = "https://www."+ searchData['domain'] +"/hades/v1/search/items?" + getReqData.toString();
+    catLink = apiLink;
     console.log(catLink);
-    console.log(apiLink);
 
     let browser = await puppeteer.launch(
         {
@@ -153,8 +140,7 @@ async function getLink(searchData, proxyInd)
 
         console.log('html');
         let html = await page.evaluate(() => document.querySelector('*').outerHTML);
-
-        let matches = html.match(/MainStore<\/span>[^<]*<\/span>(\{[^<]+)</);
+        let matches = html.match(/"line-content\">(\{[^<]+)</);
         if(!matches)
         {
             console.log("NO MATCHES");
@@ -162,11 +148,21 @@ async function getLink(searchData, proxyInd)
             browser = false;
             return false;
         }
+        urlEncodeStr = tempItemsMatches[1];
+        let tempItemsObj = botFuncs.decodeToDb(urlEncodeStr);
+        if('ads' in tempItemsObj === false)
+        {
+            console.log("NO KEY ads");
+            await browser.close();
+            browser = false;
+            return false;
+        }
+        tempItemsObj = tempItemsObj['ads'];
 
         let urlEncodeStr = matches[1];
         let obj = botFuncs.decodeToDb(urlEncodeStr);
 
-        if(obj['items'] !== undefined && obj['items']['catalogItems'] !== undefined && obj['items']['catalogItems']['byId'] !== undefined)
+        if(obj['ads'] !== undefined && obj['items']['catalogItems'] !== undefined && obj['items']['catalogItems']['byId'] !== undefined)
         {
             let items = obj['items']['catalogItems']['byId'];
             // console.log(items);
@@ -280,7 +276,7 @@ async function check()
     {
         let lastCheckTime = botFuncs.time() - CHECK_INERVAL * 60;
         let maxToCheckTime = botFuncs.time() - MAX_CHECK_TIME_TO_BACKS * 60;
-        let searchDataDb = await query("SELECT * FROM `searchs` WHERE `lastCheck` < ? AND `status` = 'new' AND `domain` LIKE '%vinted%' AND `parse_type` = 'in_back' ORDER BY `lastCheck` ASC LIMIT 1", [lastCheckTime]);
+        let searchDataDb = await query("SELECT * FROM `searchs` WHERE `lastCheck` < ? AND `status` = 'new' AND `domain` LIKE '%subito%' AND `parse_type` = 'in_back' ORDER BY `lastCheck` ASC LIMIT 1", [lastCheckTime]);
         if(searchDataDb.length > 0)
         {
             searchDataDb = searchDataDb[0];

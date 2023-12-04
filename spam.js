@@ -24,31 +24,34 @@ const conn = mysql.createConnection({
 const query = util.promisify(conn.query).bind(conn);
 
 const bot = new TelegramBot(API_KEY_BOT, {
-    polling: {
-        interval: 100,
-        autoStart: true
-    }
+    polling: false
 });
 
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+while (true)
+{
+    await delay(3000);
+    await f();
+}
 
-f();
+process.exit();
+
+process.exit();
 
 async function f()
 {
 
     let spams = await query("SELECT * FROM `spam` WHERE `status` != 'end' ORDER BY `id` ASC");
-    console.log(spams);
-    if(spams.length == 0) process.exit();
+    if(spams.length == 0) return;
 
     let botUsers = await query("SELECT * FROM `bot_users`");
-    console.log(botUsers);
 
     botUsers.push({'id':0, 'uid':botDataObj['channel']});
 
     if(botUsers.length == 0)
     {
         await query("UPDATE `spam` SET `status` = 'end'");
-        process.exit();
+        return;
     }
 
     let lastBotUserId = botUsers[botUsers.length - 1]['id'];
@@ -67,16 +70,12 @@ async function f()
 
             try
             {
-                console.log('here');
-                let res = await bot.copyMessage(botUser['uid'], spam['fromChatId'], spam['mId']);
-                console.log(res);
+                await bot.copyMessage(botUser['uid'], spam['fromChatId'], spam['mId']);
             }
             catch(err)
             {
                 console.log(err);
-                // continue;
             }
         }
     }
-    process.exit();
 }

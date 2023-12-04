@@ -45,8 +45,6 @@ const bot = new TelegramBot(API_KEY_BOT, {
         autoStart: true
     }
 });
-
-
 const axiosOptions = {headers: {'Crypto-Pay-API-Token': CRYPTO_BOT_TOKEN}};
 
 var delMsg = false;
@@ -166,18 +164,6 @@ bot.on('message', async newMsg => {
             }
 
 
-            if(!botFuncs.empty(userInput) && botFuncs.empty(cmdsKey[cmd]))
-            {
-                // if(preg_match("/^([^:]+):(.+)/", userInput, preg))
-                // {
-                    // inputType = preg[1];
-                    // editKey = preg[2];
-
-                    // if(!botFuncs.empty(fileId)) cmd = this->tg->getFile(fileId);
-
-                    // inputData[editKey] = ["type" => inputType, "val" => cmd];
-                // }
-            }
             if(!botFuncs.empty(cmdData['newUserInput'])) newUserInput = cmdData['newUserInput'];
             else newUserInput = "";
 
@@ -293,11 +279,31 @@ bot.on('message', async newMsg => {
 
                 if(inputData['start_parsing_data'] === undefined) inputData['start_parsing_data'] = {};
 
-                if(mode == "max_active_ads_of_seller")
+                if(mode == "max_active_ads_of_seller" && domainKey === "vinted")
                 {
                     if(botFuncs.isNumeric(getVal))
                     {
                         getVal = parseInt(getVal);
+
+                        sendMsg = "— Пример: `01-01-2020`\n\n🕜 *Введите минимальную* дату публикации *товара на сайте*";
+                        for(let day = 2; day >= 0; day--)
+                        {
+                            kbdsLine.push(botFuncs.nowDateFromTime(botFuncs.time() - (86400 * day)));
+                            if(day <= 1)
+                            {
+                                tempKbds.push(kbdsLine);
+                                kbdsLine = [];
+                            }
+                        }
+                    }
+                    else correctInDataVal = false;
+                }
+                else if(mode == "max_active_ads_of_seller" && domainKey !== "vinted")
+                {
+                    if(botFuncs.isNumeric(getVal))
+                    {
+                        getVal = parseInt(getVal);
+
                         sendMsg = "— Пример: `01-01-2020`\n\n🕜 *Введите минимальную* дату публикации *товара на сайте*";
                         for(let day = 2; day >= 0; day--)
                         {
@@ -869,8 +875,6 @@ bot.on('callback_query', async newMsgCall => {
             else if(!botFuncs.empty(cmdsKey[userInput])) cmdData = cmdsKey[userInput];
             else cmdData = cmdsKey['no_cmd'];
 
-            // console.log(cmdData);
-
             if(!botFuncs.empty(cmdData['answer'])) tgText = cmdData['answer'];
             if(!botFuncs.empty(cmdData['keyboards'])) kbds = cmdData['keyboards'];
             if(!botFuncs.empty(cmdData['buttons'])) btns = cmdData['buttons'];
@@ -881,19 +885,6 @@ bot.on('callback_query', async newMsgCall => {
                 if(!botFuncs.empty(cmdsKey[cmdData['kbd']]['buttons'])) btns = cmdsKey[cmdData['kbd']]['buttons'];
             }
 
-
-            if(!botFuncs.empty(userInput) && botFuncs.empty(cmdsKey[cmd]))
-            {
-                // if(preg_match("/^([^:]+):(.+)/", userInput, preg))
-                // {
-                    // inputType = preg[1];
-                    // editKey = preg[2];
-
-                    // if(!botFuncs.empty(fileId)) cmd = this->tg->getFile(fileId);
-
-                    // inputData[editKey] = ["type" => inputType, "val" => cmd];
-                // }
-            }
             if(!botFuncs.empty(cmdData['newUserInput'])) newUserInput = cmdData['newUserInput'];
             else newUserInput = "";
 
